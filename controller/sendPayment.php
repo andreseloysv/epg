@@ -53,7 +53,6 @@ class sendPayment {
 }
 
 function checkPostValues($post,$paymentValues) {
-    return true;
     if (count($paymentValues) !== count($post)) {
         return false;
     }
