@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 include_once './curl.php';
 include_once '../model/payment.php';
@@ -40,20 +41,49 @@ class sendPayment {
         return $result;
     }
 
+    function decodePostValues() {
+        $this->firstName = base64_decode($_POST['firstName']);
+        $this->lastName = base64_decode($_POST['lastName']);
+        $this->creditCardNumber = base64_decode($_POST['creditCardNumber']);
+        $this->ccv = base64_decode($_POST['ccv']);
+        $this->expiration_month = base64_decode($_POST['expiration_month']);
+        $this->expiration_year = base64_decode($_POST['expiration_year']);
+    }
+
 }
 
-$firstName = base64_decode($_POST['firstName']);
-$lastName = base64_decode($_POST['lastName']);
-$creditCardNumber = base64_decode($_POST['creditCardNumber']);
-$ccv = base64_decode($_POST['ccv']);
-$expiration_month = base64_decode($_POST['expiration_month']);
-$expiration_year = base64_decode($_POST['expiration_year']);
-$sendPayment = new sendPayment($firstName, $lastName, $creditCardNumber, $ccv, $expiration_month, $expiration_year, $amount);
-$result=$sendPayment->post();
+function checkPostValues($post,$paymentValues) {
+    return true;
+    if (count($paymentValues) !== count($post)) {
+        return false;
+    }
+    foreach ($post as $key => $value) {
+        if (!empty($value)) {
+            if (!in_array($key, $paymentValues)) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
 
-if($result->result=="OK"){
-    echo("<div style='color: #009114;font-weight: bold;font-size: medium;padding: 15px;'>Success</div>");
+if (checkPostValues($_POST,array("firstName", "lastName", "creditCardNumber", "ccv", "expiration_month", "expiration_year", "amount"))) {
+    $firstName = $_POST['firstName'];
+    $lastName = $_POST['lastName'];
+    $creditCardNumber = $_POST['creditCardNumber'];
+    $ccv = $_POST['ccv'];
+    $expiration_month = $_POST['expiration_month'];
+    $expiration_year = $_POST['expiration_year'];
+    $sendPayment = new sendPayment($firstName, $lastName, $creditCardNumber, $ccv, $expiration_month, $expiration_year, $amount);
+    $result = $sendPayment->post();
+    if ($result->result == "OK") {
+        echo("<div style='color: #009114;font-weight: bold;font-size: medium;padding: 15px;'>Success</div>");
+    } else {
+        echo("<div style='color: red;font-weight: bold;font-size: medium;padding: 15px;'>Error: " . $result->resultMessage . "</div>");
+    }
 }else{
-    echo("<div style='color: red;font-weight: bold;font-size: medium;padding: 15px;'>Error: ".$result->resultMessage."</div>");
+    echo("<div style='color: red;font-weight: bold;font-size: medium;padding: 15px;'>Error: Values fails</div>");
 }
 
